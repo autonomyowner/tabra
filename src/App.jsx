@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import './App.css'
 
 // Translations
@@ -10,6 +11,7 @@ const translations = {
       features: 'المميزات',
       howItWorks: 'كيف يعمل',
       services: 'الخدمات',
+      map: 'الخريطة',
       contact: 'تواصل معنا',
       getStarted: 'ابدأ الآن',
       langSwitch: 'EN'
@@ -176,6 +178,7 @@ const translations = {
       features: 'Features',
       howItWorks: 'How it Works',
       services: 'Services',
+      map: 'Map',
       contact: 'Contact',
       getStarted: 'Get Started',
       langSwitch: 'عربي'
@@ -356,6 +359,7 @@ function App() {
   const [lang, setLang] = useState('ar') // Default to Arabic
   const [scrolled, setScrolled] = useState(false)
   const [chatStep, setChatStep] = useState(0)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const t = translations[lang]
   const isRTL = lang === 'ar'
@@ -399,6 +403,7 @@ function App() {
               <li><a href="#features" className="nav-link">{t.nav.features}</a></li>
               <li><a href="#how-it-works" className="nav-link">{t.nav.howItWorks}</a></li>
               <li><a href="#services" className="nav-link">{t.nav.services}</a></li>
+              <li><Link to="/map" className="nav-link">{t.nav.map}</Link></li>
               <li><a href="#contact" className="nav-link">{t.nav.contact}</a></li>
             </ul>
             <button onClick={toggleLang} className="btn btn-lang">
@@ -410,13 +415,36 @@ function App() {
             <button onClick={toggleLang} className="btn btn-lang btn-lang-mobile">
               {t.nav.langSwitch}
             </button>
-            <button className="mobile-menu-btn" aria-label="Menu">
+            <button
+              className={`mobile-menu-btn ${mobileMenuOpen ? 'active' : ''}`}
+              aria-label="Menu"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
               <span></span>
               <span></span>
               <span></span>
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <motion.div
+            className="mobile-menu"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <ul className="mobile-nav-links">
+              <li><a href="#features" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.features}</a></li>
+              <li><a href="#how-it-works" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.howItWorks}</a></li>
+              <li><a href="#services" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.services}</a></li>
+              <li><Link to="/map" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.map}</Link></li>
+              <li><a href="#contact" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>{t.nav.contact}</a></li>
+            </ul>
+            <a href="#" className="btn btn-primary mobile-cta" onClick={() => setMobileMenuOpen(false)}>{t.nav.getStarted}</a>
+          </motion.div>
+        )}
       </header>
 
       {/* Hero */}
@@ -440,7 +468,7 @@ function App() {
             </motion.p>
             <motion.div className="hero-buttons" variants={fadeInUp}>
               <a href="#" className="btn btn-primary btn-large">{t.hero.btnPrimary}</a>
-              <a href="#" className="btn btn-outline btn-large">{t.hero.btnSecondary}</a>
+              <Link to="/map" className="btn btn-outline btn-large">{t.hero.btnSecondary}</Link>
             </motion.div>
             <motion.div className="hero-stats" variants={fadeInUp}>
               <div className="stat-item">
