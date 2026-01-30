@@ -29,12 +29,30 @@ const mapTranslations = {
       specialtyPlaceholder: 'مثال: طب عام، أسنان...',
       address: 'العنوان',
       addressPlaceholder: 'العنوان الكامل',
+      searchLocation: 'البحث عن موقع',
+      searchPlaceholder: 'ابحث عن عنوان أو مكان...',
+      street: 'الشارع',
+      streetPlaceholder: 'مثال: شارع محمد خميستي',
+      commune: 'البلدية',
+      communePlaceholder: 'مثال: قصر البخاري',
+      wilaya: 'الولاية',
+      wilayaPlaceholder: 'مثال: المدية',
+      postalCode: 'الرمز البريدي',
+      postalCodePlaceholder: 'مثال: 26300',
+      placeName: 'اسم المكان (اختياري)',
+      placeNamePlaceholder: 'مثال: عيادة الصنوبر',
       phone: 'الهاتف',
       phonePlaceholder: '0555 00 00 00',
       hours: 'ساعات العمل',
       hoursPlaceholder: '08:00 - 17:00',
-      clickMap: 'انقر على الخريطة لتحديد الموقع',
+      clickMap: 'تحديد الموقع على الخريطة',
+      selectOnMap: 'انقر على الخريطة',
+      orSearchAbove: 'أو ابحث عن موقع أعلاه',
       selectedLocation: 'الموقع المحدد',
+      searching: 'جاري البحث...',
+      noResults: 'لا توجد نتائج',
+      selectingMode: 'انقر على الخريطة لتحديد الموقع...',
+      cancelSelection: 'إلغاء التحديد',
       submit: 'إضافة',
       cancel: 'إلغاء'
     },
@@ -73,12 +91,30 @@ const mapTranslations = {
       specialtyPlaceholder: 'e.g. General, Dentist...',
       address: 'Address',
       addressPlaceholder: 'Full address',
+      searchLocation: 'Search Location',
+      searchPlaceholder: 'Search for an address or place...',
+      street: 'Street',
+      streetPlaceholder: 'e.g. Mohamed Khmisti Street',
+      commune: 'Commune',
+      communePlaceholder: 'e.g. Ksar El Bokhari',
+      wilaya: 'Wilaya',
+      wilayaPlaceholder: 'e.g. Medea',
+      postalCode: 'Postal Code',
+      postalCodePlaceholder: 'e.g. 26300',
+      placeName: 'Place Name (optional)',
+      placeNamePlaceholder: 'e.g. Pine Clinic',
       phone: 'Phone',
       phonePlaceholder: '0555 00 00 00',
       hours: 'Working Hours',
       hoursPlaceholder: '08:00 - 17:00',
-      clickMap: 'Click on the map to select location',
+      clickMap: 'Select location on map',
+      selectOnMap: 'Click on map',
+      orSearchAbove: 'or search for a location above',
       selectedLocation: 'Selected location',
+      searching: 'Searching...',
+      noResults: 'No results found',
+      selectingMode: 'Click on the map to select location...',
+      cancelSelection: 'Cancel selection',
       submit: 'Add',
       cancel: 'Cancel'
     },
@@ -185,10 +221,19 @@ function MapPage() {
     specialtyAr: '',
     address: '',
     addressAr: '',
+    street: '',
+    commune: '',
+    wilaya: '',
+    postalCode: '',
+    placeName: '',
     phone: '',
     hours: '',
     coordinates: null
   })
+  const [locationSearch, setLocationSearch] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [isSelectingOnMap, setIsSelectingOnMap] = useState(false)
 
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -231,16 +276,18 @@ function MapPage() {
     }
   }, [])
 
-  // Update map click handler when showAddForm changes
+  // Update map click handler when isSelectingOnMap changes
   useEffect(() => {
     if (!map.current || !mapLoaded) return
 
     const handleClick = (e) => {
-      if (showAddForm) {
+      if (isSelectingOnMap) {
         setNewLocation(prev => ({
           ...prev,
           coordinates: [e.lngLat.lng, e.lngLat.lat]
         }))
+        setIsSelectingOnMap(false)
+        setShowAddForm(true)
       }
     }
 
@@ -249,7 +296,7 @@ function MapPage() {
     return () => {
       map.current?.off('click', handleClick)
     }
-  }, [showAddForm, mapLoaded])
+  }, [isSelectingOnMap, mapLoaded])
 
   // Update markers when locations or filter changes
   useEffect(() => {
@@ -316,6 +363,87 @@ function MapPage() {
     return () => tempMarker.remove()
   }, [newLocation.coordinates, mapLoaded])
 
+  // Geocoding search with debounce
+  useEffect(() => {
+    if (!locationSearch || locationSearch.length < 3) {
+      setSearchResults([])
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationSearch)}.json?` +
+          `access_token=${mapboxgl.accessToken}&country=dz&types=address,place,locality,neighborhood,poi&limit=5`
+        )
+        const data = await response.json()
+        setSearchResults(data.features || [])
+      } catch (error) {
+        console.error('Geocoding error:', error)
+        setSearchResults([])
+      }
+      setIsSearching(false)
+    }, 400)
+
+    return () => clearTimeout(timeoutId)
+  }, [locationSearch])
+
+  // Select a geocoding result
+  const selectSearchResult = (result) => {
+    const [lng, lat] = result.center
+
+    // Parse the address components from the result
+    const context = result.context || []
+    let street = ''
+    let commune = ''
+    let wilaya = ''
+    let postalCode = ''
+
+    // Extract place name
+    const placeName = result.text || ''
+
+    // Parse context for address components
+    context.forEach(item => {
+      if (item.id.startsWith('postcode')) {
+        postalCode = item.text
+      } else if (item.id.startsWith('place') || item.id.startsWith('locality')) {
+        commune = item.text
+      } else if (item.id.startsWith('region')) {
+        wilaya = item.text
+      }
+    })
+
+    // Use the main text as street if it looks like an address
+    if (result.place_type?.includes('address')) {
+      street = result.text + (result.address ? ` ${result.address}` : '')
+    }
+
+    // Build full address string
+    const fullAddress = result.place_name || ''
+
+    setNewLocation(prev => ({
+      ...prev,
+      coordinates: [lng, lat],
+      street: street || prev.street,
+      commune: commune || prev.commune,
+      wilaya: wilaya || prev.wilaya,
+      postalCode: postalCode || prev.postalCode,
+      placeName: result.place_type?.includes('poi') ? placeName : prev.placeName,
+      address: fullAddress,
+      addressAr: fullAddress
+    }))
+
+    setLocationSearch('')
+    setSearchResults([])
+
+    // Fly to the location on the map
+    map.current?.flyTo({
+      center: [lng, lat],
+      zoom: 16
+    })
+  }
+
   const toggleLang = () => {
     setLang(prev => prev === 'ar' ? 'en' : 'ar')
   }
@@ -324,12 +452,25 @@ function MapPage() {
     e.preventDefault()
     if (!newLocation.coordinates) return
 
+    // Build full address from structured fields if not already set
+    let fullAddress = newLocation.address
+    if (!fullAddress && (newLocation.street || newLocation.commune || newLocation.wilaya)) {
+      const addressParts = []
+      if (newLocation.placeName) addressParts.push(newLocation.placeName)
+      if (newLocation.street) addressParts.push(newLocation.street)
+      if (newLocation.commune) addressParts.push(newLocation.commune)
+      if (newLocation.postalCode) addressParts.push(newLocation.postalCode)
+      if (newLocation.wilaya) addressParts.push(newLocation.wilaya)
+      fullAddress = addressParts.join(', ')
+    }
+
     const newLoc = {
       ...newLocation,
       id: Date.now(),
+      address: fullAddress,
+      addressAr: newLocation.addressAr || fullAddress,
       nameAr: newLocation.nameAr || newLocation.name,
-      specialtyAr: newLocation.specialtyAr || newLocation.specialty,
-      addressAr: newLocation.addressAr || newLocation.address
+      specialtyAr: newLocation.specialtyAr || newLocation.specialty
     }
 
     setLocations(prev => [...prev, newLoc])
@@ -341,10 +482,18 @@ function MapPage() {
       specialtyAr: '',
       address: '',
       addressAr: '',
+      street: '',
+      commune: '',
+      wilaya: '',
+      postalCode: '',
+      placeName: '',
       phone: '',
       hours: '',
       coordinates: null
     })
+    setLocationSearch('')
+    setSearchResults([])
+    setIsSelectingOnMap(false)
     setShowAddForm(false)
   }
 
@@ -473,6 +622,24 @@ function MapPage() {
 
         {/* Map */}
         <div className="map-container" ref={mapContainer}></div>
+
+        {/* Map Selection Mode Indicator */}
+        {isSelectingOnMap && (
+          <div className="map-selection-mode">
+            <div className="selection-message">
+              <span>{t.form.selectingMode}</span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setIsSelectingOnMap(false)
+                  setShowAddForm(true)
+                }}
+              >
+                {t.form.cancelSelection}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Location Form Modal */}
@@ -483,7 +650,10 @@ function MapPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowAddForm(false)}
+            onClick={() => {
+              setShowAddForm(false)
+              setIsSelectingOnMap(false)
+            }}
           >
             <motion.div
               className="modal-content"
@@ -539,15 +709,86 @@ function MapPage() {
                   />
                 </div>
 
-                {/* Address */}
+                {/* Location Search */}
+                <div className="form-group location-search-group">
+                  <label>{t.form.searchLocation}</label>
+                  <div className="search-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder={t.form.searchPlaceholder}
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                    />
+                    {isSearching && <span className="search-loading">{t.form.searching}</span>}
+                  </div>
+                  {searchResults.length > 0 && (
+                    <div className="search-results-dropdown">
+                      {searchResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className="search-result-item"
+                          onClick={() => selectSearchResult(result)}
+                        >
+                          <span className="result-name">{result.text}</span>
+                          <span className="result-address">{result.place_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {locationSearch.length >= 3 && !isSearching && searchResults.length === 0 && (
+                    <div className="no-results-message">{t.form.noResults}</div>
+                  )}
+                </div>
+
+                {/* Structured Address Fields */}
                 <div className="form-group">
-                  <label>{t.form.address}</label>
+                  <label>{t.form.placeName}</label>
                   <input
                     type="text"
-                    placeholder={t.form.addressPlaceholder}
-                    value={newLocation.address}
-                    onChange={(e) => setNewLocation(prev => ({ ...prev, address: e.target.value }))}
-                    required
+                    placeholder={t.form.placeNamePlaceholder}
+                    value={newLocation.placeName}
+                    onChange={(e) => setNewLocation(prev => ({ ...prev, placeName: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>{t.form.street}</label>
+                  <input
+                    type="text"
+                    placeholder={t.form.streetPlaceholder}
+                    value={newLocation.street}
+                    onChange={(e) => setNewLocation(prev => ({ ...prev, street: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>{t.form.commune}</label>
+                    <input
+                      type="text"
+                      placeholder={t.form.communePlaceholder}
+                      value={newLocation.commune}
+                      onChange={(e) => setNewLocation(prev => ({ ...prev, commune: e.target.value }))}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>{t.form.postalCode}</label>
+                    <input
+                      type="text"
+                      placeholder={t.form.postalCodePlaceholder}
+                      value={newLocation.postalCode}
+                      onChange={(e) => setNewLocation(prev => ({ ...prev, postalCode: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>{t.form.wilaya}</label>
+                  <input
+                    type="text"
+                    placeholder={t.form.wilayaPlaceholder}
+                    value={newLocation.wilaya}
+                    onChange={(e) => setNewLocation(prev => ({ ...prev, wilaya: e.target.value }))}
                   />
                 </div>
 
@@ -576,18 +817,43 @@ function MapPage() {
                 {/* Map Location Picker */}
                 <div className="form-group location-picker">
                   <label>{t.form.clickMap}</label>
-                  {newLocation.coordinates ? (
-                    <div className="selected-coords">
-                      {t.form.selectedLocation}: {newLocation.coordinates[1].toFixed(4)}, {newLocation.coordinates[0].toFixed(4)}
-                    </div>
-                  ) : (
-                    <div className="no-coords">{t.form.clickMap}</div>
-                  )}
+                  <div className={`map-picker-box ${newLocation.coordinates ? 'has-location' : ''}`}>
+                    {newLocation.coordinates ? (
+                      <div className="selected-coords">
+                        <span className="coords-label">{t.form.selectedLocation}:</span>
+                        <span className="coords-value">{newLocation.coordinates[1].toFixed(4)}, {newLocation.coordinates[0].toFixed(4)}</span>
+                        <button
+                          type="button"
+                          className="clear-coords-btn"
+                          onClick={() => setNewLocation(prev => ({ ...prev, coordinates: null }))}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="no-coords">
+                        <button
+                          type="button"
+                          className="select-on-map-btn"
+                          onClick={() => {
+                            setShowAddForm(false)
+                            setIsSelectingOnMap(true)
+                          }}
+                        >
+                          {t.form.selectOnMap}
+                        </button>
+                        <span className="or-search-hint">{t.form.orSearchAbove}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}
                 <div className="form-actions">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowAddForm(false)}>
+                  <button type="button" className="btn btn-secondary" onClick={() => {
+                    setShowAddForm(false)
+                    setIsSelectingOnMap(false)
+                  }}>
                     {t.form.cancel}
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={!newLocation.coordinates}>

@@ -143,15 +143,16 @@ const translations = {
     },
     // CTA
     cta: {
-      title: 'مستعد للتحكم في',
-      titleHighlight: 'صحتك',
-      description: 'انضم إلى آلاف الجزائريين الذين يثقون بتبرا لاحتياجاتهم الصحية. ابدأ بفحص أعراض مجاني اليوم.',
-      btnPrimary: 'ابدأ استشارة مجانية',
+      title: 'كن من أوائل المستخدمين',
+      titleHighlight: 'لتبرا',
+      description: 'نعمل على بناء منصة صحية متكاملة للجزائريين. سجّل الآن لتكون من أوائل من يجرب تبرا عند الإطلاق.',
+      btnPrimary: 'سجّل للإطلاق المبكر',
       btnSecondary: 'تواصل معنا'
     },
     // Footer
     footer: {
       description: 'نجعل الحياة الصحية أسهل للجزائريين. حلول رعاية صحية مدعومة بالذكاء الاصطناعي في متناول يدك.',
+      phone: '+213 667 20 22 23',
       product: {
         title: 'المنتج',
         links: ['فحص الأعراض بالذكاء الاصطناعي', 'البحث عن أطباء', 'حجز المواعيد', 'البطاقات الصحية']
@@ -310,15 +311,16 @@ const translations = {
     },
     // CTA
     cta: {
-      title: 'Ready to take control of your',
-      titleHighlight: 'health',
-      description: 'Join thousands of Algerians who trust Tabra for their healthcare needs. Start with a free symptom check today.',
-      btnPrimary: 'Start Free Consultation',
+      title: 'Be among the first to use',
+      titleHighlight: 'Tabra',
+      description: 'We are building a comprehensive healthcare platform for Algerians. Sign up now to be among the first to try Tabra at launch.',
+      btnPrimary: 'Sign Up for Early Access',
       btnSecondary: 'Contact Us'
     },
     // Footer
     footer: {
       description: 'Making health life easier for Algerians. AI-powered healthcare solutions at your fingertips.',
+      phone: '+213 667 20 22 23',
       product: {
         title: 'Product',
         links: ['AI Symptom Checker', 'Find Doctors', 'Book Appointments', 'Health Cards']
@@ -779,7 +781,7 @@ function App() {
             variants={staggerContainer}
           >
             <motion.h2 className="cta-title" variants={fadeInUp}>
-              {t.cta.title} <em>{t.cta.titleHighlight}</em>؟
+              {t.cta.title} <em>{t.cta.titleHighlight}</em>
             </motion.h2>
             <motion.p className="cta-description" variants={fadeInUp}>
               {t.cta.description}
@@ -804,6 +806,9 @@ function App() {
                 <span className="logo-text">Tabra</span>
               </a>
               <p>{t.footer.description}</p>
+              <a href={`tel:${t.footer.phone}`} className="footer-phone" dir="ltr">
+                {t.footer.phone}
+              </a>
             </div>
             <div className="footer-column">
               <h4>{t.footer.product.title}</h4>
