@@ -57,7 +57,7 @@ const translations = {
         {
           number: '02',
           title: 'دليل الأطباء',
-          description: 'اعثر على أطباء ومختصين مؤهلين في جميع الـ48 ولاية. فلتر حسب التخصص، الموقع، والتوفر.'
+          description: 'اعثر على أطباء ومختصين مؤهلين في جميع الـ69 ولاية. فلتر حسب التخصص، الموقع، والتوفر.'
         },
         {
           number: '03',
@@ -225,7 +225,7 @@ const translations = {
         {
           number: '02',
           title: 'Doctor Directory',
-          description: 'Find qualified doctors and specialists across all 48 wilayas. Filter by specialty, location, and availability.'
+          description: 'Find qualified doctors and specialists across all 69 wilayas. Filter by specialty, location, and availability.'
         },
         {
           number: '03',
@@ -482,7 +482,7 @@ function App() {
                 <p>{t.hero.stats.doctors}</p>
               </div>
               <div className="stat-item">
-                <h4>48</h4>
+                <h4>69</h4>
                 <p>{t.hero.stats.wilayas}</p>
               </div>
               <div className="stat-item">
