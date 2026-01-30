@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import AuthButtons from './components/auth/AuthButtons'
+import SymptomChecker from './components/symptoms/SymptomChecker'
 import './App.css'
 
 // Translations
@@ -362,6 +364,7 @@ function App() {
   const [scrolled, setScrolled] = useState(false)
   const [chatStep, setChatStep] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showSymptomChecker, setShowSymptomChecker] = useState(false)
 
   const t = translations[lang]
   const isRTL = lang === 'ar'
@@ -411,7 +414,7 @@ function App() {
             <button onClick={toggleLang} className="btn btn-lang">
               {t.nav.langSwitch}
             </button>
-            <a href="#" className="btn btn-primary">{t.nav.getStarted}</a>
+            <AuthButtons lang={lang} />
           </nav>
           <div className="mobile-actions">
             <button onClick={toggleLang} className="btn btn-lang btn-lang-mobile">
@@ -469,7 +472,7 @@ function App() {
               {t.hero.description}
             </motion.p>
             <motion.div className="hero-buttons" variants={fadeInUp}>
-              <a href="#" className="btn btn-primary btn-large">{t.hero.btnPrimary}</a>
+              <button onClick={() => setShowSymptomChecker(true)} className="btn btn-primary btn-large">{t.hero.btnPrimary}</button>
               <Link to="/map" className="btn btn-outline btn-large">{t.hero.btnSecondary}</Link>
             </motion.div>
             <motion.div className="hero-stats" variants={fadeInUp}>
@@ -845,6 +848,42 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Symptom Checker Modal */}
+      <AnimatePresence>
+        {showSymptomChecker && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSymptomChecker(false)}
+          >
+            <motion.div
+              className="modal-content"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close"
+                onClick={() => setShowSymptomChecker(false)}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+              <SymptomChecker
+                lang={lang}
+                onBookAppointment={(data) => {
+                  console.log('Book appointment with:', data)
+                  setShowSymptomChecker(false)
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

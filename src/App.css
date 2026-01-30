@@ -327,6 +327,7 @@
 
 .message-user {
   background: var(--gray-100);
+  color: var(--black);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
@@ -1371,6 +1372,7 @@
   border: 2px solid var(--gray-200);
   border-radius: 12px;
   background: var(--gray-100);
+  color: var(--black);
   transition: all 0.2s ease;
   font-family: inherit;
 }
@@ -1625,6 +1627,7 @@
   border: 2px solid var(--gray-200);
   border-radius: 10px;
   background: var(--white);
+  color: var(--black);
   transition: all 0.2s ease;
   font-family: inherit;
 }
@@ -2109,4 +2112,72 @@
 .map-page.rtl .search-box input,
 .map-page.rtl .form-group input {
   text-align: right;
+}
+
+/* ========================================
+   MODAL STYLES
+   ======================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-content {
+  position: relative;
+  background: var(--white);
+  border-radius: 16px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: var(--gray-100);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  color: var(--gray-600);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.rtl .modal-close {
+  right: auto;
+  left: 1rem;
+}
+
+.modal-close:hover {
+  background: var(--gray-200);
+  color: var(--black);
+}
+
+@media (max-width: 640px) {
+  .modal-content {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-overlay {
+    padding: 0;
+  }
 }

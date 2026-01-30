@@ -4,44 +4,112 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Tabra is an Algerian healthcare platform landing page built with React and Vite. It features an AI symptom checker, doctor/clinic directory with map view, appointment booking, and digital health cards.
+Tabra is an Algerian healthcare platform built with React and Vite. It features an AI symptom checker, doctor/clinic directory with map view, appointment booking, and digital health cards.
 
 ## Commands
 
 ```bash
-npm run dev      # Start development server (Vite HMR)
-npm run build    # Build for production (outputs to dist/)
-npm run preview  # Preview production build locally
-npm run lint     # Run ESLint
+npm run dev          # Start Vite development server
+npm run dev:convex   # Start Convex backend server (run in separate terminal)
+npm run build        # Build for production (outputs to dist/)
+npm run preview      # Preview production build locally
+npm run lint         # Run ESLint
+npx convex dashboard # Open Convex dashboard
 ```
 
 ## Architecture
 
-Single-page React application with minimal structure:
+### Frontend (React + Vite)
 
-- `src/App.jsx` - Main component containing all sections (header, hero, features, services, CTA, footer), plus `translations` object for all UI text
-- `src/MapPage.jsx` - Interactive map page with Mapbox GL for doctor/clinic directory, includes location search via Mapbox Geocoding API and localStorage persistence
-- `src/App.css` - Component styles using CSS custom properties
-- `src/index.css` - Global styles, fonts (Instrument Serif, Outfit, Cairo for Arabic), CSS variables
-- `src/main.jsx` - App entry point with React Router setup (routes: `/` and `/map`)
-- `public/logo.png` - Brand logo used in header/footer
+- `src/main.jsx` - App entry point with Clerk + Convex providers (conditional auth based on env vars)
+- `src/App.jsx` - Main landing page with all sections, includes `translations` object for AR/EN
+- `src/MapPage.jsx` - Interactive map with Mapbox GL for doctor/clinic directory
+- `src/components/` - Reusable UI components
+  - `auth/AuthButtons.jsx` - Sign in/up buttons with Clerk
+  - `symptoms/SymptomChecker.jsx` - Conversational AI symptom analysis chat
+  - `appointments/BookingForm.jsx` - Appointment booking UI
 
-**Bilingual Support**: The app supports Arabic (RTL) and English (LTR) with language toggle. All translatable text is in the `translations` object at the top of App.jsx with `ar` and `en` keys. MapPage has its own `mapTranslations` object. RTL styles are in App.css under `.rtl` class.
+### Backend (Convex)
 
-**Animation Pattern**: Uses Framer Motion with reusable variants (`fadeInUp`, `staggerContainer`) for scroll-triggered animations via `whileInView`.
+```
+convex/
+├── schema.ts              # Database schema (8 tables)
+├── auth.config.ts         # Clerk JWT verification config
+├── http.ts                # HTTP routes for webhooks
+├── users/
+│   ├── queries.ts         # getCurrentUser, getFavorites, isFavorite
+│   └── mutations.ts       # updateProfile, toggleFavorite, webhook handlers
+├── doctors/
+│   ├── queries.ts         # listDoctors, searchDoctors, getSpecialties, getNearLocation
+│   └── mutations.ts       # createDoctor, updateDoctor, addReview, seedDoctors
+├── appointments/
+│   ├── queries.ts         # getUserAppointments, getAvailableSlots, getAppointment
+│   └── mutations.ts       # bookAppointment, cancelAppointment, rescheduleAppointment
+├── healthCards/
+│   ├── queries.ts         # getMyHealthCard, getMyMedicalRecords
+│   └── mutations.ts       # createHealthCard, updateHealthCard, addMedicalRecord
+├── symptoms/
+│   ├── actions.ts         # analyzeSymptoms (OpenRouter API with conversation history)
+│   ├── queries.ts         # getMyAnalyses, getAnalysis
+│   └── mutations.ts       # storeAnalysis
+└── webhooks/
+    └── clerk.ts           # User sync from Clerk (create/update/delete)
+```
 
-**Map Integration**: MapPage uses Mapbox GL JS with a hardcoded access token. Locations are stored in localStorage under `tabra-locations` key.
+### Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `users` | User profiles synced from Clerk |
+| `doctors` | Doctors, clinics, hospitals |
+| `availabilitySchedules` | Time slots per doctor |
+| `appointments` | Bookings with status tracking |
+| `healthCards` | Digital health cards |
+| `medicalRecords` | Prescriptions, lab results, etc. |
+| `symptomAnalyses` | AI analysis history |
+| `reviews` | Doctor ratings & reviews |
 
 ## Key Technologies
 
 - **React 19** with Vite 7
-- **React Router DOM 7** for client-side routing
-- **Framer Motion** for scroll-triggered animations and transitions
-- **Mapbox GL JS** for interactive maps and geocoding
-- **CSS Custom Properties** for theming (--red: #DC2626, white-space focused design)
+- **Convex** - Serverless backend with real-time subscriptions
+- **Clerk** - Authentication (sign up/in, user management)
+- **OpenRouter** - AI API (Claude 3.5 Haiku for symptom analysis)
+- **Mapbox GL JS** - Interactive maps and geocoding
+- **Framer Motion** - Animations
+- **React Router DOM 7** - Client-side routing
+
+## Environment Variables
+
+### Frontend (.env.local)
+```
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxx
+VITE_MAPBOX_PUBLIC_TOKEN=pk.xxx
+```
+
+### Convex Dashboard (Settings > Environment Variables)
+```
+CLERK_JWT_ISSUER_DOMAIN=https://your-clerk.clerk.accounts.dev
+CLERK_WEBHOOK_SECRET=whsec_xxx
+OPENROUTER_API_KEY=sk-or-xxx
+```
+
+## Setup Instructions
+
+1. Run `npx convex dev` to initialize Convex (creates deployment)
+2. Copy the Convex URL to `VITE_CONVEX_URL` in `.env.local`
+3. Add environment variables in Convex Dashboard > Settings
+4. Set up Clerk webhook:
+   - Go to Clerk Dashboard > Webhooks
+   - Add endpoint: `https://your-convex.convex.site/clerk-users-webhook`
+   - Select events: `user.created`, `user.updated`, `user.deleted`
+   - Copy webhook secret to Convex environment
 
 ## Design Constraints
 
 - No icons in UI (per project requirements)
 - Red (#DC2626) primary color with generous white space
-- Instrument Serif for headings, Outfit for body text
+- Instrument Serif for headings, Outfit for body text, Cairo for Arabic
+- Bilingual: Arabic (RTL) and English (LTR) with language toggle
+- All translatable text in `translations` objects at component level
