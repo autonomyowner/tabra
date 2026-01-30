@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import ChatWidget from './components/chat/ChatWidget'
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYXplZGRpbmV6ZWxsYWciLCJhIjoiY21sMDJ2cWN6MDF2eTNmczZjM3RrNGgzOCJ9.nj7bNijXa1rMWKui0LbpqA'
 
@@ -922,6 +923,9 @@ function MapPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Chat Widget */}
+      <ChatWidget lang={lang} />
     </div>
   )
 }

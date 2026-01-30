@@ -912,15 +912,29 @@
   padding-top: 2rem;
   border-top: 1px solid var(--gray-200);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
   gap: 1rem;
 }
 
 .footer-bottom p {
   color: var(--gray-600);
   font-size: 0.875rem;
+}
+
+.footer-hadith {
+  font-family: var(--font-arabic), serif;
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--gray-700);
+  max-width: 600px;
+  line-height: 1.8;
+  text-align: center;
+  margin: 0 auto 1rem;
+}
+
+.rtl .footer-hadith {
+  font-style: normal;
 }
 
 .footer-legal {

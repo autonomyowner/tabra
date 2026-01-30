@@ -15,7 +15,10 @@ npm run build        # Build for production (outputs to dist/)
 npm run preview      # Preview production build locally
 npm run lint         # Run ESLint
 npx convex dashboard # Open Convex dashboard
+npx convex deploy    # Deploy Convex to production
 ```
+
+**Development**: Run `npm run dev` and `npm run dev:convex` in separate terminals simultaneously.
 
 ## Architecture
 
@@ -105,6 +108,15 @@ OPENROUTER_API_KEY=sk-or-xxx
    - Add endpoint: `https://your-convex.convex.site/clerk-users-webhook`
    - Select events: `user.created`, `user.updated`, `user.deleted`
    - Copy webhook secret to Convex environment
+
+## Deployments
+
+| Environment | Convex URL | Clerk |
+|-------------|------------|-------|
+| Development | `https://prestigious-duck-501.convex.cloud` | `pk_test_*` |
+| Production | `https://zany-starling-644.convex.cloud` | `pk_live_*` (clerk.tabra.space) |
+
+Frontend hosted on Vercel with environment variables for each deployment.
 
 ## Design Constraints
 

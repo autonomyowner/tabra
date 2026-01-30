@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import AuthButtons from './components/auth/AuthButtons'
 import SymptomChecker from './components/symptoms/SymptomChecker'
+import ChatWidget from './components/chat/ChatWidget'
 import './App.css'
 
 // Translations
@@ -168,7 +169,7 @@ const translations = {
         links: ['مركز المساعدة', 'تواصل معنا', 'للأطباء', 'للعيادات']
       },
       bottom: {
-        copyright: '© 2024 تبرا. جميع الحقوق محفوظة. صُنع بعناية في الجزائر.',
+        hadith: 'قال ﷺ: "تداووا فإن الله تعالى لم يضع داءً إلا وضع له دواءً غير داء واحد: الهرم" (سنن الترمذي)',
         privacy: 'سياسة الخصوصية',
         terms: 'شروط الخدمة',
         cookies: 'سياسة ملفات تعريف الارتباط'
@@ -336,7 +337,7 @@ const translations = {
         links: ['Help Center', 'Contact Us', 'For Doctors', 'For Clinics']
       },
       bottom: {
-        copyright: '© 2024 Tabra. All rights reserved. Made with care in Algeria.',
+        hadith: 'The Prophet ﷺ said: "Seek treatment, for Allah has not created a disease except that He has also created its cure, except for one: old age" (Sunan al-Tirmidhi)',
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
         cookies: 'Cookie Policy'
@@ -839,7 +840,7 @@ function App() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>{t.footer.bottom.copyright}</p>
+            <p className="footer-hadith">{t.footer.bottom.hadith}</p>
             <div className="footer-legal">
               <a href="#">{t.footer.bottom.privacy}</a>
               <a href="#">{t.footer.bottom.terms}</a>
@@ -848,6 +849,9 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Chat Widget */}
+      <ChatWidget lang={lang} />
 
       {/* Symptom Checker Modal */}
       <AnimatePresence>
