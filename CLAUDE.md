@@ -20,18 +20,24 @@ npm run lint     # Run ESLint
 Single-page React application with minimal structure:
 
 - `src/App.jsx` - Main component containing all sections (header, hero, features, services, CTA, footer), plus `translations` object for all UI text
+- `src/MapPage.jsx` - Interactive map page with Mapbox GL for doctor/clinic directory, includes location search via Mapbox Geocoding API and localStorage persistence
 - `src/App.css` - Component styles using CSS custom properties
 - `src/index.css` - Global styles, fonts (Instrument Serif, Outfit, Cairo for Arabic), CSS variables
+- `src/main.jsx` - App entry point with React Router setup (routes: `/` and `/map`)
 - `public/logo.png` - Brand logo used in header/footer
 
-**Bilingual Support**: The app supports Arabic (RTL) and English (LTR) with language toggle. All translatable text is in the `translations` object at the top of App.jsx with `ar` and `en` keys. RTL styles are in App.css under `.rtl` class.
+**Bilingual Support**: The app supports Arabic (RTL) and English (LTR) with language toggle. All translatable text is in the `translations` object at the top of App.jsx with `ar` and `en` keys. MapPage has its own `mapTranslations` object. RTL styles are in App.css under `.rtl` class.
 
 **Animation Pattern**: Uses Framer Motion with reusable variants (`fadeInUp`, `staggerContainer`) for scroll-triggered animations via `whileInView`.
+
+**Map Integration**: MapPage uses Mapbox GL JS with a hardcoded access token. Locations are stored in localStorage under `tabra-locations` key.
 
 ## Key Technologies
 
 - **React 19** with Vite 7
+- **React Router DOM 7** for client-side routing
 - **Framer Motion** for scroll-triggered animations and transitions
+- **Mapbox GL JS** for interactive maps and geocoding
 - **CSS Custom Properties** for theming (--red: #DC2626, white-space focused design)
 
 ## Design Constraints
