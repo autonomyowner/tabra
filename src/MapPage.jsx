@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '../convex/_generated/api'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import ChatWidget from './components/chat/ChatWidget'
@@ -135,81 +137,37 @@ const mapTranslations = {
   }
 }
 
-// Sample data for doctors and clinics in Algeria
-const initialLocations = [
-  {
-    id: 1,
-    type: 'doctor',
-    name: 'Dr. Ahmed Benali',
-    nameAr: 'د. أحمد بن علي',
-    specialty: 'General Medicine',
-    specialtyAr: 'طب عام',
-    address: 'Rue Didouche Mourad, Algiers',
-    addressAr: 'شارع ديدوش مراد، الجزائر',
-    phone: '0555 12 34 56',
-    hours: '08:00 - 16:00',
-    coordinates: [3.0588, 36.7538]
-  },
-  {
-    id: 2,
-    type: 'clinic',
-    name: 'Clinique El Azhar',
-    nameAr: 'عيادة الأزهر',
-    specialty: 'Multi-specialty',
-    specialtyAr: 'متعدد التخصصات',
-    address: 'Boulevard Mohamed V, Oran',
-    addressAr: 'شارع محمد الخامس، وهران',
-    phone: '0550 98 76 54',
-    hours: '24/7',
-    coordinates: [-0.6349, 35.6969]
-  },
-  {
-    id: 3,
-    type: 'doctor',
-    name: 'Dr. Fatima Zahra',
-    nameAr: 'د. فاطمة الزهراء',
-    specialty: 'Pediatrics',
-    specialtyAr: 'طب الأطفال',
-    address: 'Avenue de l\'ALN, Constantine',
-    addressAr: 'شارع جيش التحرير، قسنطينة',
-    phone: '0560 11 22 33',
-    hours: '09:00 - 17:00',
-    coordinates: [6.6147, 36.3650]
-  },
-  {
-    id: 4,
-    type: 'clinic',
-    name: 'Centre Médical Annaba',
-    nameAr: 'المركز الطبي عنابة',
-    specialty: 'Cardiology',
-    specialtyAr: 'أمراض القلب',
-    address: 'Rue de la Santé, Annaba',
-    addressAr: 'شارع الصحة، عنابة',
-    phone: '0555 44 55 66',
-    hours: '08:00 - 20:00',
-    coordinates: [7.7667, 36.9000]
-  },
-  {
-    id: 5,
-    type: 'doctor',
-    name: 'Dr. Karim Meziane',
-    nameAr: 'د. كريم مزيان',
-    specialty: 'Dentistry',
-    specialtyAr: 'طب الأسنان',
-    address: 'Place des Martyrs, Blida',
-    addressAr: 'ساحة الشهداء، البليدة',
-    phone: '0570 77 88 99',
-    hours: '10:00 - 18:00',
-    coordinates: [2.8283, 36.4700]
-  }
-]
+// Transform Convex doctor data to map format
+const transformDoctorToLocation = (doctor) => ({
+  id: doctor._id,
+  type: doctor.type === 'hospital' ? 'clinic' : doctor.type, // treat hospital as clinic for filtering
+  name: doctor.name_en,
+  nameAr: doctor.name_ar,
+  specialty: doctor.specialty,
+  specialtyAr: doctor.specialty_ar || doctor.specialty,
+  address: doctor.address,
+  addressAr: doctor.address,
+  phone: doctor.phone || '',
+  hours: doctor.workingHours ? formatWorkingHours(doctor.workingHours) : '',
+  coordinates: [doctor.coordinates.lng, doctor.coordinates.lat] // Mapbox uses [lng, lat]
+})
+
+const formatWorkingHours = (hours) => {
+  if (!hours || hours.length === 0) return ''
+  const firstDay = hours.find(h => !h.isClosed)
+  return firstDay ? `${firstDay.open} - ${firstDay.close}` : ''
+}
 
 function MapPage() {
   const [lang, setLang] = useState('ar')
-  const [locations, setLocations] = useState(() => {
-    const saved = localStorage.getItem('tabra-locations')
-    return saved ? JSON.parse(saved) : initialLocations
-  })
+
+  // Fetch doctors from Convex
+  const doctorsFromDb = useQuery(api.doctors.queries.listDoctors, {})
+  const createDoctor = useMutation(api.doctors.mutations.createDoctor)
+
+  // Transform to map format
+  const locations = doctorsFromDb ? doctorsFromDb.map(transformDoctorToLocation) : []
+  const isLoading = doctorsFromDb === undefined
   const [filter, setFilter] = useState('all')
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
@@ -244,10 +202,6 @@ function MapPage() {
   const t = mapTranslations[lang]
   const isRTL = lang === 'ar'
 
-  // Save locations to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('tabra-locations', JSON.stringify(locations))
-  }, [locations])
 
   // Initialize map
   useEffect(() => {
@@ -449,7 +403,7 @@ function MapPage() {
     setLang(prev => prev === 'ar' ? 'en' : 'ar')
   }
 
-  const handleAddLocation = (e) => {
+  const handleAddLocation = async (e) => {
     e.preventDefault()
     if (!newLocation.coordinates) return
 
@@ -465,16 +419,27 @@ function MapPage() {
       fullAddress = addressParts.join(', ')
     }
 
-    const newLoc = {
-      ...newLocation,
-      id: Date.now(),
-      address: fullAddress,
-      addressAr: newLocation.addressAr || fullAddress,
-      nameAr: newLocation.nameAr || newLocation.name,
-      specialtyAr: newLocation.specialtyAr || newLocation.specialty
+    // Save to Convex database
+    try {
+      await createDoctor({
+        type: newLocation.type,
+        name_en: newLocation.name,
+        name_ar: newLocation.nameAr || newLocation.name,
+        specialty: newLocation.specialty,
+        specialty_ar: newLocation.specialtyAr || newLocation.specialty,
+        address: fullAddress,
+        wilaya: newLocation.wilaya || 'Unknown',
+        coordinates: {
+          lat: newLocation.coordinates[1],
+          lng: newLocation.coordinates[0]
+        },
+        phone: newLocation.phone || undefined,
+        languages: ['ar', 'fr']
+      })
+    } catch (error) {
+      console.error('Failed to add location:', error)
     }
 
-    setLocations(prev => [...prev, newLoc])
     setNewLocation({
       type: 'doctor',
       name: '',
@@ -552,18 +517,25 @@ function MapPage() {
             </button>
           </div>
 
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="loading-indicator" style={{ padding: '10px', textAlign: 'center', color: '#666' }}>
+              Loading doctors...
+            </div>
+          )}
+
           {/* Stats */}
           <div className="map-stats">
             <div className="stat">
-              <span className="stat-number">{locations.length}</span>
+              <span className="stat-number">{isLoading ? '...' : locations.length}</span>
               <span className="stat-label">{t.stats.total}</span>
             </div>
             <div className="stat">
-              <span className="stat-number">{doctorCount}</span>
+              <span className="stat-number">{isLoading ? '...' : doctorCount}</span>
               <span className="stat-label">{t.stats.doctors}</span>
             </div>
             <div className="stat">
-              <span className="stat-number">{clinicCount}</span>
+              <span className="stat-number">{isLoading ? '...' : clinicCount}</span>
               <span className="stat-label">{t.stats.clinics}</span>
             </div>
           </div>

@@ -234,6 +234,30 @@ export const seedDoctors = internalMutation({
         consultationFee: 2500,
         languages: ["ar", "fr"],
       },
+      {
+        type: "clinic",
+        name_en: "Etablissement Hospitalier Privé Naila",
+        name_ar: "المؤسسة الاستشفائية الخاصة نائلة",
+        specialty: "multi-specialty",
+        specialty_ar: "متعددة التخصصات",
+        address: "Cité Berbih Bd N°06 Lots 164, Propriété 99, Djelfa",
+        wilaya: "Djelfa",
+        coordinates: { lat: 34.6725, lng: 3.2500 },
+        phone: "027 93 93 46 / 0550 93 74 05",
+        languages: ["ar", "fr"],
+      },
+      {
+        type: "hospital",
+        name_en: "Hôpital d'Ophtalmologie (Algérie-Cuba)",
+        name_ar: "مستشفى طب العيون (الجزائر-كوبا)",
+        specialty: "ophthalmology",
+        specialty_ar: "طب العيون",
+        address: "Rue Administrative, Djelfa 17000",
+        wilaya: "Djelfa",
+        coordinates: { lat: 34.6740, lng: 3.2560 },
+        phone: "027 93 66 74",
+        languages: ["ar", "fr"],
+      },
     ];
 
     for (const doctor of sampleDoctors) {
@@ -248,6 +272,6 @@ export const seedDoctors = internalMutation({
       });
     }
 
-    return { success: true, count: sampleDoctors.length };
+    return { success: true, count: sampleDoctors.length }; // Now 5 establishments
   },
 });

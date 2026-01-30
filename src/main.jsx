@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ClerkProvider, useAuth } from '@clerk/clerk-react'
 import { ConvexProviderWithClerk } from 'convex/react-clerk'
-import { ConvexReactClient } from 'convex/react'
+import { ConvexReactClient, ConvexProvider } from 'convex/react'
 import './index.css'
 import App from './App.jsx'
 import MapPage from './MapPage.jsx'
@@ -19,15 +19,17 @@ if (!clerkPubKey) {
 }
 
 function AppWithProviders() {
-  // If no Clerk key, render without auth
+  // If no Clerk key, render with Convex but without auth
   if (!clerkPubKey) {
     return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/map" element={<MapPage />} />
-        </Routes>
-      </BrowserRouter>
+      <ConvexProvider client={convex}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/map" element={<MapPage />} />
+          </Routes>
+        </BrowserRouter>
+      </ConvexProvider>
     )
   }
 
